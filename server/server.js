@@ -1,0 +1,92 @@
+
+const express = require("express");
+const cors = require("cors");
+const mongoose = require("mongoose");
+require("dotenv").config();
+
+const Contact = require("./models/Contact");
+const path = require("path");
+const fs = require("fs");
+
+
+const app = express();
+
+app.use(cors());
+app.use(express.json());
+
+app.get("/", (req, res) => {
+  res.send("Manish's Portfolio API is running!");
+});
+app.get("/api/resume", (req, res) => {
+  const resumePath = path.join(__dirname, "resume.pdf");
+
+  if (!fs.existsSync(resumePath)) {
+    return res.status(404).send("Resume PDF not found.");
+  }
+
+  res.download(resumePath, "Manish_Sharma_Resume.pdf");
+});
+// Save contact form message
+app.post("/api/contact", async (req, res) => {
+  try {
+    const { name, email, message } = req.body;
+
+    if (
+      typeof name !== "string" ||
+      typeof email !== "string" ||
+      typeof message !== "string" ||
+      !name.trim() ||
+      !email.trim() ||
+      !message.trim()
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide name, email and message."
+      });
+    }
+
+    if (
+      name.length > 100 ||
+      email.length > 254 ||
+      message.length > 3000
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Input is too long."
+      });
+    }
+
+    const contact = await Contact.create({
+      name: name.trim(),
+      email: email.trim(),
+      message: message.trim()
+    });
+
+    res.status(201).json({
+      success: true,
+      message: "Contact message saved successfully!",
+      id: contact._id
+    });
+  } catch (error) {
+    console.error("Contact save error:", error.message);
+    res.status(500).json({
+      success: false,
+      message: "Unable to save contact message."
+    });
+  }
+});
+
+mongoose
+  .connect(process.env.MONGODB_URI)
+  .then(() => {
+    console.log("MongoDB connected successfully!");
+
+    const PORT = process.env.PORT || 5000;
+
+    app.listen(PORT, () => {
+      console.log(`Server running on port ${PORT}`);
+    });
+  })
+  .catch((error) => {
+    console.error("MongoDB connection failed:", error.message);
+  });
