@@ -1,4 +1,5 @@
 
+
 const express = require("express");
 const cors = require("cors");
 const mongoose = require("mongoose");
@@ -8,25 +9,32 @@ const Contact = require("./models/Contact");
 const path = require("path");
 const fs = require("fs");
 
-
 const app = express();
-const cors = require("cors");
 
-app.use(cors({
-  origin: [
-    "https://portfolio-ai0066.vercel.app",
-    "https://portfolio-eight-coral-21.vercel.app"
-  ],
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"]
-}));
+// Allowed frontend domains
+const allowedOrigins = [
+  "https://portfolio-ai0066.vercel.app",
+  "https://portfolio-eight-coral-21.vercel.app"
+];
 
-app.use(cors());
+// CORS configuration
+app.use(
+  cors({
+    origin: allowedOrigins,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"]
+  })
+);
+
+// Middleware
 app.use(express.json());
 
+// Home route
 app.get("/", (req, res) => {
   res.send("Manish's Portfolio API is running!");
 });
+
+// Resume download route
 app.get("/api/resume", (req, res) => {
   const resumePath = path.join(__dirname, "resume.pdf");
 
@@ -36,7 +44,8 @@ app.get("/api/resume", (req, res) => {
 
   res.download(resumePath, "Manish_Sharma_Resume.pdf");
 });
-// Save contact form message
+
+// Contact form route
 app.post("/api/contact", async (req, res) => {
   try {
     const { name, email, message } = req.body;
@@ -72,20 +81,22 @@ app.post("/api/contact", async (req, res) => {
       message: message.trim()
     });
 
-    res.status(201).json({
+    return res.status(201).json({
       success: true,
       message: "Contact message saved successfully!",
       id: contact._id
     });
   } catch (error) {
     console.error("Contact save error:", error.message);
-    res.status(500).json({
+
+    return res.status(500).json({
       success: false,
       message: "Unable to save contact message."
     });
   }
 });
 
+// Connect MongoDB and start server
 mongoose
   .connect(process.env.MONGODB_URI)
   .then(() => {
