@@ -10,6 +10,16 @@ const fs = require("fs");
 
 
 const app = express();
+const cors = require("cors");
+
+app.use(cors({
+  origin: [
+    "https://portfolio-ai0066.vercel.app",
+    "https://portfolio-eight-coral-21.vercel.app"
+  ],
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"]
+}));
 
 app.use(cors());
 app.use(express.json());
